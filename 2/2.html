@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Programming Project #2</title>
+    <link rel="stylesheet" type="text/css" href="2.css">
+</head>
+
+<body>
+
+    <div class="paper">
+
+        <div class="header">
+            <h1>Programming Project #2</h1>
+            <p>by Fergus Yang</p>
+        </div>
+
+        <hr class="sep-line">
+
+        <section>
+            <h1>Part 1.1: Convolutions from Scratch!</h1>
+
+            <p>This is the code sniffer I write of this part:</p>
+
+            <pre>
+    def conv(mat, kernel):
+        '''
+        Implement convolve2d with 2 for loops.
+        same with signal.convolve2d(mat, kernel, mode='same', boundary='fill').
+        @mat:    image data
+        @kernel: conv kernel. row and col can have even size
+        @return: convolve result
+        '''
+    
+        row, col = mat.shape
+        krow, kcol = kernel.shape
+        ret = np.zeros((row, col))
+    
+        # padding the matrix like this:
+        '''
+        0 0 0 0 0 0 0 0 0 
+        0 0 x x x x x 0 0 
+        0 0 x x x x x 0 0 
+        0 0 x x x x x 0 0 
+        0 0 0 0 0 0 0 0 0
+        '''
+        pad_row0 = (krow    ) // 2 # number of row padding top
+        pad_row1 = (krow - 1) // 2 # number of row padding bottom
+        pad_col0 = (kcol    ) // 2 # number of row padding left
+        pad_col1 = (kcol - 1) // 2 # number of row padding right
+        pad_mat = np.vstack([np.zeros((pad_row0, col + pad_col0 + pad_col1)),
+                            np.hstack([np.zeros((row, pad_col0)), mat, np.zeros((row, pad_col1))]),
+                            np.zeros((pad_row1, col + pad_col0 + pad_col1)),
+                            ])
+        # rotate kernel into 180
+        kernel180 = np.rot90(kernel, k = 2)
+    
+        for r in range(row):
+            for c in range(col):
+                window = pad_mat[r : r + krow, c : c + kcol]
+                ret[r][c] = np.sum(window * kernel180)
+        return ret
+
+
+    # take a picture of myself and read it as grayscale
+    img = cv2.imread("img11/myself.jpg", cv2.IMREAD_GRAYSCALE) / 255.0
+    print(img.shape)
+    
+    # write out a 9x9 box filter
+    box_filter = np.array([[1] * 3] * 3) / 9
+    
+    # convolve the picture with the box filter.
+    res = conv(img, box_filter)
+    
+    # Do it with the finite difference operators Dx and Dy as well
+    Dx = np.array([[1, 0, -1]])
+    Dy = Dx.T
+    
+    res = conv(img, Dx)
+    res = conv(img, Dy)
+
+            </pre>
+
+            <h5>
+                Compare it with a built-in convolution function.
+            </h5>
+            <p>
+                To test correcness, I generate 10 M &times; N matrix, where 10 &le; M &le;100, 10 &le;N &le;100, and 10
+                m &times; n matrix, where 1 &le;M &le;9, 1 &le;N &le;9. Calcualte the convolutions by my implementation
+                and
+                `signal.convolve2d`, and compare their results. The results shows that the result of my implemention and
+                `signal.convolve2d` is exactly same, that means my implementation is correct.
+                <br>
+                To test efficiency, I generate 20 larger M x N matrix, where 100 &le;M &le;200, 100 &le;N &le;200, and
+                10 m x n
+                matrix, where 10
+                &le;M &le;20, 20 &le;N &le;30. Calcualte the convolutions by my implementation and `signal.convolve2d`,
+                and
+                compare their running time. Result shows that my implementation run in 5.1 second, while
+                `signal.convolve2d` run in 0.5 second, that mean my implementation is slower than
+                `signal.convolve2d`.
+            </p>
+            <h5>
+                How boundary are handled
+            </h5>
+            <p>Before perform convolution, I resize 1st matrix, expanded its height and width according to the size of
+                kernel. Fill the the expanded position with zero.</p>
+
+            <h5>Test with my own image</h5>
+            <p>
+                Image a is my original picture. Convolving a with 9x9 box filter yields image b. We can find that image
+                b become blur, since we take the average of each neighborhood. Convolving a with Dx produces image c. We
+                can observe Dx filter extract the vertical edges of image. Convolving a with Dy result in d. We can find
+                Dy filter can extract the horizontal edges of image.
+            </p>
+
+            <div class="image-container">
+
+                <div class="image-item">
+                    <img src="img11/myself.jpg">
+                    <p>a. myself</p>
+                </div>
+                <div class="image-item">
+                    <img src="img11/myself_box_filter.jpg">
+                    <p>b. convolve with box filter</p>
+                </div>
+
+            </div>
+            <div class="image-container">
+
+                <div class="image-item">
+                    <img src="img11/myself_dx.jpg">
+                    <p>c. convolve with Dx</p>
+                </div>
+                <div class="image-item">
+                    <img src="img11/myself_dy.jpg">
+                    <p>d. convolve with Dy</p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section>
+            <h1>Part 1.2: Finite Difference Operator</h1>
+
+            <p> Show the partial derivative in x and y of the cameraman image by convolving the image with finite
+                difference operators Dx and Dy, which are run as follows: </p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img12/cameraman_dx.jpg">
+                    <p>a. convolve with Dx</p>
+                </div>
+                <div class="image-item">
+                    <img src="img12/cameraman_dy.jpg">
+                    <p>b. convolve with Dy</p>
+                </div>
+            </div>
+            <p> Compute and show the gradient magnitude image. </p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img12/cameraman_grad.jpg">
+                    <p>c. gradient magnitude image</p>
+                </div>
+
+            </div>
+            <p> Turn this into an edge image, lets binarize the gradient magnitude image by picking the appropriate
+                threshold. To find the appropriate threshold, we try some threshold like 0.2, 0.3, 0.4, and observer the
+                result.</p>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img12/cameraman_binary2.jpg">
+                    <p>d. threshold is 0.2</p>
+                </div>
+                <div class="image-item">
+                    <img src="img12/cameraman_binary3.jpg">
+                    <p>e. threshold is 0.3</p>
+                </div>
+                <div class="image-item">
+                    <img src="img12/cameraman_binary4.jpg">
+                    <p>f. threshold is 0.4</p>
+                </div>
+            </div>
+            <p>We can find that when threshold is 0.2, there are more remainning noise; when threshold is 0.4, some
+                edges will
+                disappear. 0.3 is a good trade off.</p>
+        </section>
+
+        <section>
+            <h1>Part 1.3: Derivative of Gaussian (DoG) Filter</h1>
+
+            <p> Create a blurred version of the original image by convolving with a gaussian and repeat the procedure in
+                the previous part. The results are run as follows:</p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img13/cameraman_smooth.png">
+                    <p> a. result of 1st method </p>
+                </div>
+            </div>
+
+            <p>Do the same thing with a single convolution instead of two by creating a derivative of gaussian filters.
+                Convolve the gaussian with Dx and Dy and display the resulting DoG filters as images. The results are
+                run as follows:</p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img13/cameraman_smooth.png">
+                    <p> b. result of 2nd method </p>
+                </div>
+            </div>
+
+            <h5> What differences do you see?</h5>
+
+            <p>We can find that the noise in result is less than Part 1.2 .That is because Gaussian filter can smooth
+                the noise, since it take the average of neighborhood for each pixel.</p>
+
+            <h5> Verify that you get the same result as before.</h5>
+
+            <p>I subtract the result of 2nd method from the result of 1st method, and sum up the absolute value, and
+                find that the differ is very small, about 2.4e-11, which means 2 methods yield same results. <br>
+
+                Besides, we should skip the image edge when calcualte differ.</p>
+
+
+
+        </section>
+
+        <section>
+            <h1>Part 2.1: Image "Sharpening"</h1>
+
+            <h5>Explain how it works in relation to blur filters and high frequencies.</h5>
+
+            <p>The Gaussian filter is a low pass filter that perserves only the low frequencies components of an image.
+                So image become blured after apply a Gaussian filter. To extract the high frequencies components, we can
+                subtract the blurred version from the original image. An image often looks sharper if it has stronger
+                high frequencies. To get a sharpen image, we can add a portion of high frequencies to the original
+                image.</p>
+
+            <p>The intermediate process of sharpen image are run as follows:</p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img21/taj.jpg">
+                    <p> a. original image </p>
+                </div>
+                <div class="image-item">
+                    <img src="img21/taj_low.jpg">
+                    <p> b. blured image (low frequency) </p>
+                </div>
+                <div class="image-item">
+                    <img src="img21/taj_high.jpg">
+                    <p> c. high frequency image </p>
+                </div>
+            </div>
+
+            <h5>Demonstrate how varying the sharpening amount changes the result.</h5>
+            <p>The sharpened image can be obtained using following equation:</p>
+
+            <div class="equation">sharpen image = original image + &alpha; x high-frequency image</div>
+
+            <p>By adjusting the value of &alpha;, like 0.3, 0.6, 1.0, which act as an amplification of high-frequency
+                components, we can control the intensity of image. </p>
+
+            <p>The results are run as follows, we can find as &alpha; increase, the image become sharper.</p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img21/taj_3.jpg">
+                    <p> c. sharpen image(&alpha; = 0.3) </p>
+                </div>
+                <div class="image-item">
+                    <img src="img21/taj_6.jpg">
+                    <p> d. sharpen image(&alpha; = 0.6) </p>
+                </div>
+                <div class="image-item">
+                    <img src="img21/taj_10.jpg">
+                    <p> e. sharpen image(&alpha; = 1.0) </p>
+                </div>
+            </div>
+            <p>Pick a sharp image, we select sharpen image(&alpha; = 0.6), blur it and then try to sharpen it again.
+                Compare the original and the sharpened
+                image and report your observations.<br>
+            </p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img21/taj_sharp_again.jpg">
+                    <p> f. sharpen image again</p>
+                </div>
+            </div>
+
+            <p>
+                Compare with d and f, we can find f is sharper than d. That is because d has more high frequency than
+                original image, which result in adding high frequency to d again, more frequency will be add than first
+                time. So, f has more high frequency than d.
+            </p>
+            <p>
+                We use another image perfrom same operation, the results are run as follows:
+            </p>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img21/myself.jpg">
+                    <p> g. original image </p>
+                </div>
+                <div class="image-item">
+                    <img src="img21/myself_low.jpg">
+                    <p> h. blured image (low frequency) </p>
+                </div>
+                <div class="image-item">
+                    <img src="img21/myself_high.jpg">
+                    <p> i. high frequency image </p>
+                </div>
+            </div>
+
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img21/myself_3.jpg">
+                    <p> j. sharpen image(&alpha; = 0.3) </p>
+                </div>
+                <div class="image-item">
+                    <img src="img21/myself_6.jpg">
+                    <p> k. sharpen image(&alpha; = 0.6) </p>
+                </div>
+                <div class="image-item">
+                    <img src="img21/myself_10.jpg">
+                    <p> l. sharpen image(&alpha; = 1.0) </p>
+                </div>
+            </div>
+            <p>We observe that the result is similar. As &alpha; increase, the image become sharper.</p>
+
+        </section>
+
+
+        <section>
+            <h1>Part 2.2: Hybrid Images</h1>
+            <p>
+                For this part, the basic idea is that high frequency tends to dominate perception when it is available,
+                but, at a distance, only the low frequency (smooth) part of the signal can be seen. By blending the high
+                frequency portion of one image with the low-frequency portion of another, you get a hybrid image that
+                leads to different interpretations at different distances.
+            </p>
+            <p>We use Derek + Nutmeg as example, illustrate the entire process. (Note: the high frequency energy
+                distribute along the border of frequency domain; while low frequency energy is concentrated at the
+                center)</p>
+
+            <p>The following figures shows the original and aligned images of Derek and its frequency component. We can
+                find that the energy distribute in both high and low frequency regions.</p>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img22/pic1.jpg">
+                    <p> a. original Derek image </p>
+                </div>
+                <div class="image-item">
+                    <img src="img22/img1_fft.jpg">
+                    <p> b. frequency region of original Derek image</p>
+                </div>
+            </div>
+            <p>After applying lowpass filter to Derek, we can find the image become blured. In frequency field, the
+                energy at high frequency is decreased due to low pass fileter, while low frequency region energy remain
+                unchanged.</p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img22/img1low.jpg">
+                    <p> c. blured Derek image </p>
+                </div>
+                <div class="image-item">
+                    <img src="img22/img1low_fft.jpg">
+                    <p> d. frequency region of blured Derek image</p>
+                </div>
+            </div>
+            <p>The following figures shows the original and aligned images of Nutmeg and its frequency component, which
+                is similar with Derek.</p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img22/pic2.jpg">
+                    <p> e. original Nutmeg image </p>
+                </div>
+                <div class="image-item">
+                    <img src="img22/img2_fft.jpg">
+                    <p> f. frequency region of original Nutmeg image</p>
+                </div>
+            </div>
+            <p>After applying highpass filter to Nutmeg, we can find the image become sharper. In frequency field, the
+                energy at low frequency is decreased due to high pass fileter, while high frequency field energy remain
+                unchanged.</p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img22/img2high.jpg">
+                    <p> g. sharpen Nutmeg image </p>
+                </div>
+                <div class="image-item">
+                    <img src="img22/img2high_fft.jpg">
+                    <p> h. frequency region of sharpen Nutmeg image </p>
+                </div>
+            </div>
+            <p>We add the low frequency Derek with high frequency Nutmeg, arrive at the result image, which are run as
+                follows. We can find that we will see Nutmeg if we are near the image; while we can see Derek if we are
+                far from the image. Besides, its frequecy fields are mix with low and high energy.</p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img22/img2merge.jpg">
+                    <p> i. hybrid image </p>
+                </div>
+                <div class="image-item">
+                    <img src="img22/img2merge_fft.jpg">
+                    <p> j. frequency region of hybrid image </p>
+                </div>
+            </div>
+
+            <p>We repeat above process with another 2 examples:</p>
+
+            <p>The 1st example is merge 2 face of Biden and Putin. The results shows that we can see Putin if we near
+                the image; while we can see Biden if we far from image.</p>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img22/B.jpg">
+                    <p> k. original image 1</p>
+                </div>
+                <div class="image-item">
+                    <img src="img22/Blow.jpg">
+                    <p> l. blured image 1</p>
+                </div>
+            </div>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img22/P.jpg">
+                    <p> m. original image 2</p>
+                </div>
+
+                <div class="image-item">
+                    <img src="img22/Phigh.jpg">
+                    <p> n. sharpper image 2</p>
+                </div>
+            </div>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img22/BmergeP.jpg">
+                    <p> o. hybrid image </p>
+                </div>
+            </div>
+
+            <p>
+                The 2nd example is also merge 2 face of Zelensky and Merkel. The results shows that we can see Merkel if
+                we near the image; while we can see Zelensky if we far from image.
+            </p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img22/zl.jpg">
+                    <p> p. original image 1</p>
+                </div>
+                <div class="image-item">
+                    <img src="img22/zlLow.jpg">
+                    <p> q. blured image 1</p>
+                </div>
+            </div>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img22/mokeer.jpg">
+                    <p> r. original image 2</p>
+                </div>
+
+                <div class="image-item">
+                    <img src="img22/mokeerHigh.jpg">
+                    <p> s. sharpper image 2</p>
+                </div>
+            </div>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img22/zlMergeMokeer.jpg">
+                    <p> t. hybrid image </p>
+                </div>
+            </div>
+
+
+
+        </section>
+        <section>
+            <h1>Part 2.3: Gaussian and Laplacian Stacks</h1>
+            <h1>Part 2.4: Multiresolution Blending</h1>
+
+            <p>Gaussian and Laplacian stack are implemented in my code. The different between a stack and a pyramid is
+                that in each level of the pyramid the image is downsampled, so that the result gets smaller and smaller.
+                In a stack the images are never downsampled so the results are all the same dimension as the original
+                image, and can all be saved in one 3D matrix.</p>
+
+            <p>To implements blend, we need 3 images: image1, image2 as well as mask image. Both of them have same
+                shape. The mask image is binary image.</p>
+
+            <p>The key idea of blend is that we calculate the Gaussian stack of mask image, and Laplacian stack if
+                image1 and image2. For each level of stack, we blend 2 image in this way:</p>
+
+            <div class="equation"> hybrid image = image 1 &times; mask image + image 2 &times; (1 - mask image)</div>
+            <p>for each level from last level to first level.</p>
+            <p>Then, we can use same method as shown in slide to produce hybrid image.</p>
+            <p>We use apple + orange as example, illustrate the entire process.</p>
+            <p>Follows are original apple, orange and mask image.</p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img23/apple.jpeg">
+                    <p> apple image </p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/orange.jpeg">
+                    <p> orange image </p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/mask.jpg">
+                    <p> mask </p>
+                </div>
+            </div>
+            <p>Follows are hybrid process.</p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img23/ma.jpg">
+                    <p> a. high frequency of <br>apple Laplacian stack </p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/mb.jpg">
+                    <p> b. high frequency of <br>orange Laplacian stack </p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/mc.jpg">
+                    <p> c. high frequency of <br>blend Laplacian stack </p>
+                </div>
+            </div>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img23/md.jpg">
+                    <p> d. medium frequency of <br>apple Laplacian stack </p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/me.jpg">
+                    <p> e. medium frequency of <br>orange Laplacian stack </p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/mf.jpg">
+                    <p> f. medium frequency of <br>blend Laplacian stack </p>
+                </div>
+            </div>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img23/mg.jpg">
+                    <p> g. low frequency of <br>apple Laplacian stack </p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/mh.jpg">
+                    <p> h. low frequency of <br>orange Laplacian stack</p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/mi.jpg">
+                    <p> i. low frequency of <br>blend Laplacian stack </p>
+                </div>
+            </div>
+            <p>Follows are hybrid results. We can hardly see the seam between the apple and orange. That means the
+                bybrid is success.
+            </p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img23/mj.jpg">
+                    <p> j. blend of <br>apple Laplacian stack </p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/mk.jpg">
+                    <p> k. blend of <br>orange Laplacian stack </p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/ml.jpg">
+                    <p> l. blend of <br>blend Laplacian stack </p>
+                </div>
+            </div>
+            <p>Follows are 2 additional example demonstrating the blending results.</p>
+            <p>This example is blends ahand with amouse, the mouse is seamlessly integrated with the hand.</p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img23/hand.jpg">
+                    <p> m. hand </p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/face.jpg">
+                    <p> n. face </p>
+                </div>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img23/mask2.jpg">
+                    <p> o. mask </p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/faceWithHand.jpg">
+                    <p> p. hybrid of face and hand </p>
+                </div>
+            </div>
+            <p>This example is perfroms a face replacement. Blending President Biden's face onto President Putin's body.
+            </p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img23/B.jpg">
+                    <p> q. Biden </p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/P.jpg">
+                    <p> r. Putin </p>
+                </div>
+            </div>
+
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="img23/mask4.jpg">
+                    <p> s. mask </p>
+                </div>
+                <div class="image-item">
+                    <img src="img23/BWithP.jpg">
+                    <p> t. hybrid of Biden and Putin </p>
+                </div>
+            </div>
+
+
+        </section>
+
+    </div>
+
+</body>
+
+</html>
