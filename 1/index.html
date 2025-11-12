@@ -4,6 +4,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>CS180: Project 1</title>
+    <link rel="stylesheet" type="text/css" href="../CS180.css">
     <style>
         body {
             background: white;
@@ -102,330 +103,326 @@
 
 <body>
 
-    <h1>
-        <img src="../image/logo.png" alt="berkeley logo" height="75" width="75">
-        Programming Project #1 (<code>proj1</code>)
-        <br>
-        by fergusyyang
-    </h1>
-    <br>
+    <div class="paper">
 
-    <h3>Background</h3>
-    <p>
-        Sergei Mikhailovich Prokudin-Gorskii, a pioneerng photographer, who record three exposures of every scene onto a
-        glass plate using a red, a green, and a blue filter. Never mind that there was no way to print color photographs
-        until much later. In this project, we extract the three color channel images, overlay them, and align them to
-        reconstruct a single RGB color image. However, the main challenge is how to algin the 3 channel image
-        accurately, especially when dealing with very large the image size. This project will solve this problem
-        precisely.
-    </p>
-    <table align="center" width="300px" border="0px">
-        <tr>
-            <td>
-                <h2>
-                    <img src="image/introduction.jpg" width="100%">
-                </h2>
-            </td>
-        </tr>
-    </table>
+        <div class="header">
+            <h1>Programming Project #1</h1>
+            <p>by Fergus Yang</p>
+        </div>
 
-    <h3>Single-scale Alignment </h3>
-    <p>
-        Consider that when the image size is small, we can just use single scale aligment.
-        For single scale alignment, the algorithm is relatively straightforward. Exhaustive search is sufficent. This
-        involve traverse over a range of possible offsets from (-15, -15) ~ (15, 15), which covers 31 x 31 displacement
-        pairs. For each offset, we apply it to one of image and calculate the similarigy score between 2 images. The
-        offset yield highest score is select as the best displacement offset. Finally, we apply this displacement offset
-        on original image to produce the aligned image.
-    </p>
+        <hr class="sep-line">
 
-    <p>
-        Regarding the choice of <b>matching metric</b>, in my experiment, Normalized Cross-Correlation (NCC) is bettern
-        than
-        Euclidean Distance, which is particular true when the image gray value changes abruptly. This is because NCC is
-        insensitive to such changes.
-    </p>
 
-    <p>
-        Single-scale alignment using NCC norm metrics work well on the low-resolution images (JPEG files), which are run
-        as follows:
-    </p>
+        <section>
+            <h1>Background</h1>
+            <p>
+                Sergei Mikhailovich Prokudin-Gorskii, a pioneerng photographer, who record three exposures of every
+                scene onto a glass plate using a red, a green, and a blue filter. Never mind that there was no way to
+                print color
+                photographs until much later. In this project, we extract the three color channel images, overlay them,
+                and align
+                them to reconstruct a single RGB color image. However, the main challenge is how to align the 3 channel
+                image
+                accurately, especially when dealing with very large the image size. This project will solve this problem
+                precisely.
+            </p>
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="image/introduction.jpg" width="200px">
+                    <p>3 Channel Image</p>
+                </div>
+            </div>
+        </section>
 
-    </p>
-    <table align="center" width="600px" border="0px">
-        <!--      image 1     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="single/cathedral_out.jpg" width="100%">
-                    cathedral.jpg
-                    <br>
-                    blue channel offset: (-5, -2)
-                    <br>
-                    red channel offset: (7, 1)
+        <section>
+            <h1>Single-scale Alignment</h1>
+            <p>
+                Consider that when the image size is small, we can just use single scale aligment.
+                For single scale alignment, the algorithm is relatively straightforward. Exhaustive search is sufficent.
+                This involve traverse over a range of possible offsets from (-15, -15) ~ (15, 15), which covers 31 x 31
+                displacement pairs. For each offset, we apply it to one of image and calculate the similarigy score
+                between 2 images. The offset yield highest score is select as the best displacement offset. Finally, we
+                apply this
+                displacement offset on original image to produce the aligned image.
+            </p>
+            <p>
+                Regarding the choice of <b>matching metric</b>, in my experiment, Normalized Cross-Correlation (NCC) is
+                bettern than Euclidean Distance, which is particular true when the image gray value changes abruptly.
+                This is because NCC is insensitive to such changes.
+            </p>
+            <p>
+                Single-scale alignment using NCC norm metrics work well on the low-resolution images (JPEG files), which
+                are run as follows:
+            </p>
+            <!--      image 1     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="single/cathedral_out.jpg" style="width: 600px;">
+                    <p> cathedral.jpg
+                        <br>
+                        blue channel offset: (-5, -2)
+                        <br>
+                        red channel offset: (7, 1)
+                    </p>
                 </div>
-            </td>
-        </tr>
-        <!--      image 2     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="single/monastery_out.jpg" width="100%">
-                    monastery.jpg
-                    <br>
-                    blue channel offset: (3, -2)
-                    <br>
-                    red channel offset: (6, 1)
-                </div>
-            </td>
-        </tr>
-        <!--      image 3     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="single/tobolsk_out.jpg" width="100%">
-                    tobolsk.jpg
-                    <br>
-                    blue channel offset: (-3, -3)
-                    <br>
-                    red channel offset: (4, 1)
-                </div>
-            </td>
-        </tr>
-    </table>
+            </div>
 
-    <h3>Multi-scale Alignment</h3>
-    <p>When the pixel displacement is too large, exhaustive search becomes prohibitively expensive. We can use image
-        pyramid approach. In details, we can recusively scales the image by half until the image size become smaller
-        enough. Then, we can perform single scale alginment to get a coarse offset: (dr, dc). That means the optimal
-        offset of next high resolution level is likely adjacent to (2 * dr, 2 * dc). So, we can apply local search
-        within a small window around (2 * dr, 2 * dc) to get the optimal image offset.
-    </p>
-    <p>
-        Furthermore, the images to be matched do not actually have the same brightness values, and they differ in color
-        channels. So, we should preprocess each channel, and apply histogram equalization to each color channel of
-        original images to normalize their intensity distribution.
-    </p>
+            <!--      image 2     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="single/monastery_out.jpg" style="width: 600px;">
+                    <p> monastery.jpg
+                        <br>
+                        blue channel offset: (3, -2)
+                        <br>
+                        red channel offset: (6, 1)
+                    </p>
+                </div>
+            </div>
 
-    <p>
-        Applying histogram equalization often lead to better alginment. For example, the image on the left is algin
-        diectly, while the on the right is undergone histogram equalization.
-    </p>
-    <table align="center" width="800px" border="0px">
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="image/algin_direct.jpg" width="400px">
-                    algin directly
+            <!--      image 3     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="single/tobolsk_out.jpg" style="width: 600px;">
+                    <p> tobolsk.jpg
+                        <br>
+                        blue channel offset: (-3, -3)
+                        <br>
+                        red channel offset: (4, 1)
+                    </p>
                 </div>
-            </td>
-            <td>
-                <div class="img_with_title">
-                    <img src="multi/emir_out.jpg" width="400px">
-                    algin with histogram equalization
-                </div>
-            </td>
-        </tr>
-    </table>
-    <p>
-        Multi-scale alignment using NCC norm metrics work well on the high-resolution images (TIFF files), which are run
-        as follwos
-    </p>
-    <p>
-    </p>
-    <table align="center" width="600px" border="0px">
+            </div>
+        </section>
 
-        <!--      image 1     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="multi/church_out.jpg" width="100%">
-                    church.jpg
-                    <br>
-                    blue channel offset: (-24, -4)
-                    <br>
-                    red channel offset: (33, -8)
-                </div>
-            </td>
-        </tr>
-        <!--      image 2     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="multi/emir_out.jpg" width="100%">
-                    emir.jpg
-                    <br>
-                    blue channel offset: (-48, -24)
-                    <br>
-                    red channel offset: (57, 17)
-                </div>
-            </td>
-        </tr>
+        <section>
+            <h1>Multi-scale Alignment</h1>
+            <p>When the pixel displacement is too large, exhaustive search becomes prohibitively expensive. We can use
+                image pyramid approach. In details, we can recusively scales the image by half until the image size
+                become smaller enough. Then, we can perform single scale alignment to get a coarse offset: (dr, dc).
+                That means
+                the optimal offset of next high resolution level is likely adjacent to (2 * dr, 2 * dc). So, we can
+                apply
+                local search within a small window around (2 * dr, 2 * dc) to get the optimal image offset.
+            </p>
+            <p>
+                Furthermore, the images to be matched do not actually have the same brightness values, and they differ
+                in color channels. So, we should preprocess each channel, and apply histogram equalization to each color
+                channel of original images to normalize their intensity distribution.
+            </p>
 
-        <!--      image 3     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="multi/harvesters_out.jpg" width="100%">
-                    harvesters.jpg
-                    <br>
-                    blue channel offset: (-59, -17)
-                    <br>
-                    red channel offset: (65, -2)
-                </div>
-            </td>
-        </tr>
+            <p>
+                Applying histogram equalization often lead to better alignment. For example, the image on the left is
+                align diectly, while the on the right is undergone histogram equalization. Obviously, the align with
+                histogram equalization yield good result.
+            </p>
 
-        <!--      image 4     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="multi/icon_out.jpg" width="100%">
-                    icon.jpg
-                    <br>
-                    blue channel offset: (-41, -18)
-                    <br>
-                    red channel offset: (49, 5)
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="image/algin_direct.jpg">
+                    <p> align directly
+                    </p>
                 </div>
-            </td>
-        </tr>
+                <div class="image-item">
+                    <img src="multi/emir_out.jpg">
+                    <p> align with histogram equalization
+                    </p>
+                </div>
+            </div>
 
-        <!--      image 5     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="multi/italil_out.jpg" width="100%">
-                    italil.jpg
-                    <br>
-                    blue channel offset: (-38, -21)
-                    <br>
-                    red channel offset: (39, 15)
-                </div>
-            </td>
-        </tr>
+            <p>
+                Multi-scale alignment using NCC norm metrics work well on the high-resolution images (TIFF files), which
+                are run as follows:
+            </p>
 
-        <!--      image 6     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="multi/lastochikino_out.jpg" width="100%">
-                    lastochikino.jpg
-                    <br>
-                    blue channel offset: (3, 2)
-                    <br>
-                    red channel offset: (78, -7)
+            <!--      image 1     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="multi/church_out.jpg" style="width: 600px;">
+                    <p>
+                        church.jpg
+                        <br>
+                        blue channel offset: (-24, -4)
+                        <br>
+                        red channel offset: (33, -8)
+                    </p>
                 </div>
-            </td>
-        </tr>
+            </div>
 
-        <!--      image 7     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="multi/lugano_out.jpg" width="100%">
-                    lugano.jpg
-                    <br>
-                    blue channel offset: (-41, 16)
-                    <br>
-                    red channel offset: (53, -13)
+            <!--      image 2     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="multi/emir_out.jpg" style="width: 600px;">
+                    <p>
+                        emir.jpg
+                        <br>
+                        blue channel offset: (-48, -24)
+                        <br>
+                        red channel offset: (57, 17)
+                    </p>
                 </div>
-            </td>
-        </tr>
+            </div>
+            <!--      image 3     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="multi/harvesters_out.jpg" style="width: 600px;">
+                    <p>
+                        harvesters.jpg
+                        <br>
+                        blue channel offset: (-59, -17)
+                        <br>
+                        red channel offset: (65, -2)
+                    </p>
+                </div>
+            </div>
+            <!--      image 4     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="multi/icon_out.jpg" style="width: 600px;">
+                    <p>
+                        icon.jpg
+                        <br>
+                        blue channel offset: (-41, -18)
+                        <br>
+                        red channel offset: (49, 5)
+                    </p>
+                </div>
+            </div>
+            <!--      image 5     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="multi/italil_out.jpg" style="width: 600px;">
+                    <p>
+                        italil.jpg
+                        <br>
+                        blue channel offset: (-38, -21)
+                        <br>
+                        red channel offset: (39, 15)
+                    </p>
+                </div>
+            </div>
+            <!--      image 6     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="multi/lastochikino_out.jpg" style="width: 600px;">
+                    <p>
+                        lastochikino.jpg
+                        <br>
+                        blue channel offset: (3, 2)
+                        <br>
+                        red channel offset: (78, -7)
+                    </p>
+                </div>
+            </div>
+            <!--      image 7     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="multi/lugano_out.jpg" style="width: 600px;">
+                    <p>
+                        lugano.jpg
+                        <br>
+                        blue channel offset: (-41, 16)
+                        <br>
+                        red channel offset: (53, -13)
+                    </p>
+                </div>
+            </div>
+            <!--      image 8     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="multi/melons_out.jpg" style="width: 600px;">
+                    <p>
+                        melons.jpg
+                        <br>
+                        blue channel offset: (-85, -10)
+                        <br>
+                        red channel offset: (96, 4)
+                    </p>
+                </div>
+            </div>
+            <!--      image 9     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="multi/three_generations_out.jpg" style="width: 600px;">
+                    <p>
+                        three_generations.jpg
+                        <br>
+                        blue channel offset: (-52, -15)
+                        <br>
+                        red channel offset: (59, -3)
+                    </p>
+                </div>
+            </div>
+            <!--      image 10     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="multi/self_portrait_out.jpg" style="width: 600px;">
+                    <p>
+                        self_portrait.jpg
+                        <br>
+                        blue channel offset: (-78, -29)
+                        <br>
+                        red channel offset: (98, 8)
+                    </p>
+                </div>
+            </div>
+            <!--      image 11     -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="multi/siren_out.jpg" style="width: 600px;">
+                    <p>
+                        siren.jpg
+                        <br>
+                        blue channel offset: (-49, 5)
+                        <br>
+                        red channel offset: (47, -19)
+                    </p>
+                </div>
+            </div>
 
-        <!--      image 8     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="multi/melons_out.jpg" width="100%">
-                    melons.jpg
-                    <br>
-                    blue channel offset: (-85, -10)
-                    <br>
-                    red channel offset: (96, 4)
-                </div>
-            </td>
-        </tr>
+        </section>
 
-        <!--      image 9     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="multi/three_generations_out.jpg" width="100%">
-                    three_generations.jpg
-                    <br>
-                    blue channel offset: (-52, -15)
-                    <br>
-                    red channel offset: (59, -3)
-                </div>
-            </td>
-        </tr>
+        <section>
+            <h1>Some Other example</h1>
+            <p>This is some example from the Prokudin-Gorskii collection</p>
 
-        <!--      image 10     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="multi/self_portrait_out.jpg" width="100%">
-                    self_portrait.jpg
-                    <br>
-                    blue channel offset: (-78, -29)
-                    <br>
-                    red channel offset: (98, 8)
+            <p>
+                <a href="https://www.loc.gov/item/2018681248/">[Yusuf Hamadani mosque and mausoleum, ancient Merv,
+                    Turkmenistan]</a>
+            </p>
+            <!--      image 1      -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="image/example1.jpg" style="width: 600px;">
+                    <p>
+                        blue channel offset: (-40, 1)
+                        <br>
+                        red channel offset: (56, 10)
+                    </p>
                 </div>
-            </td>
-        </tr>
+            </div>
+            <p>
+                <a href="https://www.loc.gov/item/2018679023/">V I︠A︡snoĭ poli︠a︡ni︠e︡</a>
+            </p>
+            <!--      image 2      -->
+            <div class="image-container">
+                <div class="image-item">
+                    <img src="image/example2.jpg" style="width: 600px;">
+                    <p>
+                        blue channel offset: (-32, -5)
+                        <br>
+                        red channel offset: (47, 2)
+                    </p>
+                </div>
+            </div>
 
-        <!--      image 11     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="multi/siren_out.jpg" width="100%">
-                    siren.jpg
-                    <br>
-                    blue channel offset: (-49, 5)
-                    <br>
-                    red channel offset: (47, -19)
-                </div>
-            </td>
-        </tr>
-    </table>
+        </section>
 
-    <h3>Some example</h3>
-    <p>This is some example from the Prokudin-Gorskii collection</p>
-    <p>
-        <a href="https://www.loc.gov/item/2018681248/">[Yusuf Hamadani mosque and mausoleum, ancient Merv,
-            Turkmenistan]</a>
-    </p>
-    <table align="center" width="600px" border="0px">
-        <!--      image 1     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="image/example1.jpg" width="100%">
-                    blue channel offset: (-40, 1)
-                    <br>
-                    red channel offset: (56, 10)
-                </div>
-            </td>
-        </tr>
-    </table>
-    <p>
-        <a href="https://www.loc.gov/item/2018679023/">V I︠A︡snoĭ poli︠a︡ni︠e︡</a>
-    </p>
-    <table align="center" width="600px" border="0px">
-        <!--      image 1     -->
-        <tr>
-            <td>
-                <div class="img_with_title">
-                    <img src="image/example2.jpg" width="100%">
-                    blue channel offset: (-32, -5)
-                    <br>
-                    red channel offset: (47, 2)
-                </div>
-            </td>
-        </tr>
-    </table>
-    <h3>Results</h3>
-    <p>My code work well on all of 14 images. No defects.</p>
+        <section>
+            <h1>Conslusion</h1>
+            <p>My code work well on all of 14 images. No defects.</p>
+        </section>
+
+    </div>
 
 </body>
 

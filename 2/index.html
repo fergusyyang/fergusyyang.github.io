@@ -2,9 +2,9 @@
 <html>
 
 <head>
-    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Programming Project #2</title>
-    <link rel="stylesheet" type="text/css" href="2.css">
+    <link rel="stylesheet" type="text/css" href="../CS180.css">
 </head>
 
 <body>
@@ -490,7 +490,7 @@
                 shape. The mask image is binary image.</p>
 
             <p>The key idea of blend is that we calculate the Gaussian stack of mask image, and Laplacian stack if
-                image1 and image2. For each level of stack, we blend 2 image in this way:</p>
+                image1 and image2. For each level of stack, we blend 2 images in this way:</p>
 
             <div class="equation"> hybrid image = image 1 &times; mask image + image 2 &times; (1 - mask image)</div>
             <p>for each level from last level to first level.</p>
@@ -571,8 +571,8 @@
                     <p> l. blend of <br>blend Laplacian stack </p>
                 </div>
             </div>
-            <p>Follows are 2 additional example demonstrating the blending results.</p>
-            <p>This example is blends ahand with amouse, the mouse is seamlessly integrated with the hand.</p>
+            <p>Follows are 2 additional examples demonstrating the blending results.</p>
+            <p>This example is blends a hand with a mouse, the mouse is seamlessly integrated with the hand.</p>
             <div class="image-container">
                 <div class="image-item">
                     <img src="img23/hand.jpg">
@@ -594,7 +594,7 @@
                     <p> p. hybrid of face and hand </p>
                 </div>
             </div>
-            <p>This example is perfroms a face replacement. Blending President Biden's face onto President Putin's body.
+            <p>This example is perform a face replacement. Blending President Biden's face onto President Putin's body.
             </p>
             <div class="image-container">
                 <div class="image-item">

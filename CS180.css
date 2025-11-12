@@ -117,6 +117,6 @@ img {
 .image-container p {
     text-align: center;
     margin: 2px;
-    border: 1px dotted #0FF;
+    /* border: 1px dotted #0FF; */
     font-weight: bold;
 }
