@@ -57,32 +57,14 @@
       border:1px solid var(--border);
       border-radius:var(--radius);
     }
-    nav.toc h2{margin:0 0 10px; font-size:16px}
-    /* horizontal TOC list */
-    .toclist{
-      list-style:none;
-      margin:0;
-      padding:0;
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px 14px;
-      align-items:center;
+    nav.toc h2{margin:0 0 8px; font-size:16px}
+    .tocgrid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap:8px 18px;
     }
-    .toclist li{margin:0; padding:0}
-    .toclist a{
-      display:inline-flex;
-      gap:6px;
-      align-items:baseline;
-      padding:6px 10px;
-      border:1px solid var(--border);
-      border-radius:999px;
-      background:#fff;
-      color:var(--text);
-      font-size:13px;
-      line-height:1.2;
-      white-space:nowrap;
-    }
-    .toclist a span{color:var(--muted)}
+    .tocgrid a{color:var(--text)}
+    .tocgrid a span{color:var(--muted)}
     .section{
       margin-top:22px;
       background:var(--card);
@@ -119,6 +101,11 @@
       gap:14px;
       align-items:start;
     }
+    /* Equal-size grid variant (prevents "tiny" figures) */
+    .grid.equal{
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+
     figure{
       margin:0;
       padding:12px;
@@ -127,6 +114,7 @@
       background:#fff;
     }
     figure.full{grid-column: 1 / -1;}
+
     img{
       width:100%;
       height:auto;
@@ -140,10 +128,20 @@
       font-size:13px;
       color:var(--muted);
     }
+    ul{margin:8px 0 0 18px}
     .divider{
       margin:18px 0 0;
       border-top:1px dashed var(--border);
       padding-top:16px;
+    }
+    code.kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background:#f3f4f6;
+      border:1px solid var(--border);
+      border-radius:8px;
+      padding:2px 6px;
+      color:#111827;
+      font-size:12px;
     }
   </style>
 </head>
@@ -164,33 +162,35 @@
 
       <nav class="toc" aria-label="Table of contents">
         <h2>Table of Contents</h2>
-        <ul class="toclist">
-          <li><a href="#part-a"><strong>Part A</strong> <span>Diffusion Editing</span></a></li>
-          <li><a href="#A0">A.0 <span>Text-to-Image</span></a></li>
-          <li><a href="#A11">1.1 <span>Forward Process</span></a></li>
-          <li><a href="#A12">1.2 <span>Gaussian Blur</span></a></li>
-          <li><a href="#A13">1.3 <span>One-Step Denoise</span></a></li>
-          <li><a href="#A14">1.4 <span>Iterative Denoise</span></a></li>
-          <li><a href="#A15">1.5 <span>No CFG Sampling</span></a></li>
-          <li><a href="#A16">1.6 <span>CFG Sampling</span></a></li>
-          <li><a href="#A17">1.7 <span>SDEdit</span></a></li>
-          <li><a href="#A171">1.7.1 <span>Hand-drawn/Web</span></a></li>
-          <li><a href="#A172">1.7.2 <span>Inpainting</span></a></li>
-          <li><a href="#A173">1.7.3 <span>Text i2i</span></a></li>
-          <li><a href="#A18">1.8 <span>Anagrams</span></a></li>
-          <li><a href="#A19">1.9 <span>Hybrid</span></a></li>
+        <div class="tocgrid">
+          <a href="#part-a"><strong>Part A</strong> <span>— Diffusion Editing</span></a>
+          <a href="#part-b"><strong>Part B</strong> <span>— Training UNets</span></a>
 
-          <li><a href="#part-b"><strong>Part B</strong> <span>Training UNets</span></a></li>
-          <li><a href="#B12">B.1.2 <span>One-step Denoiser</span></a></li>
-          <li><a href="#B121">B.1.2.1 <span>Train σ=0.5</span></a></li>
-          <li><a href="#B122">B.1.2.2 <span>OOD σ</span></a></li>
-          <li><a href="#B123">B.1.2.3 <span>Pure Noise</span></a></li>
-          <li><a href="#B22">B.2.2 <span>Flow Matching</span></a></li>
-          <li><a href="#B23">B.2.3 <span>Sampling</span></a></li>
-          <li><a href="#B25">B.2.5 <span>Class-cond Train</span></a></li>
-          <li><a href="#B26">B.2.6 <span>CFG Samples</span></a></li>
-          <li><a href="#B26nosched">B.2.6 <span>No Scheduler</span></a></li>
-        </ul>
+          <a href="#A0">A.0 <span>Text-to-Image</span></a>
+          <a href="#A11">1.1 <span>Forward Process</span></a>
+          <a href="#A12">1.2 <span>Gaussian Blur Denoising</span></a>
+          <a href="#A13">1.3 <span>One-Step Denoising</span></a>
+          <a href="#A14">1.4 <span>Iterative Denoising</span></a>
+          <a href="#A15">1.5 <span>Sampling (no CFG)</span></a>
+          <a href="#A16">1.6 <span>Sampling (with CFG)</span></a>
+          <a href="#A17">1.7 <span>Image-to-Image (SDEdit)</span></a>
+          <a href="#A171">1.7.1 <span>Hand-drawn / Web Edits</span></a>
+          <a href="#A172">1.7.2 <span>Inpainting</span></a>
+          <a href="#A173">1.7.3 <span>Text-Conditional i2i</span></a>
+          <a href="#A18">1.8 <span>Visual Anagrams</span></a>
+          <a href="#A19">1.9 <span>Hybrid Images</span></a>
+
+          <a href="#B12">B.1.2 <span>One-step MNIST Denoiser</span></a>
+          <a href="#B121">B.1.2.1 <span>Training (σ=0.5)</span></a>
+          <a href="#B122">B.1.2.2 <span>OOD σ Testing</span></a>
+          <a href="#B123">B.1.2.3 <span>Pure Noise Denoising</span></a>
+
+          <a href="#B22">B.2.2 <span>Time-conditioned Flow Matching</span></a>
+          <a href="#B23">B.2.3 <span>Sampling (time-only)</span></a>
+          <a href="#B25">B.2.5 <span>Class-conditioned Training</span></a>
+          <a href="#B26">B.2.6 <span>Class-conditioned Sampling + CFG</span></a>
+          <a href="#B26nosched">B.2.6 <span>No-scheduler Experiment</span></a>
+        </div>
       </nav>
     </div>
   </header>
@@ -304,6 +304,7 @@
           We add controlled amounts of noise to an input image, then denoise back onto the “natural image manifold.”
           Less noise preserves the original; more noise yields stronger edits.
         </p>
+        <!-- FIX: make all three images full-width so they are consistent and not tiny -->
         <div class="grid">
           <figure class="full">
             <img src="images/img9%20A1.7.0%20Campanile.png" alt="1.7 SDEdit on Campanile across noise levels">
@@ -586,4 +587,3 @@
   </main>
 </body>
 </html>
-
