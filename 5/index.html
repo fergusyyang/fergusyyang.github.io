@@ -1,1 +1,608 @@
+<!-- /5/index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CS180 Project 5 — Diffusion Models (Parts A & B)</title>
+  <style>
+    :root{
+      --bg:#fafafa;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --link:#2563eb;
+      --max: 1100px;
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.6;
+    }
+    a{color:var(--link); text-decoration:none}
+    a:hover{text-decoration:underline}
+    .container{max-width:var(--max); margin:0 auto; padding:28px 18px 80px}
+    header{
+      background:linear-gradient(180deg, #fff, #f8fafc);
+      border-bottom:1px solid var(--border);
+    }
+    .hero{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:28px 18px 18px;
+    }
+    .title{margin:0 0 4px; font-size:28px; letter-spacing:-0.02em}
+    .subtitle{margin:0; color:var(--muted)}
+    .pillrow{margin-top:10px; display:flex; gap:10px; flex-wrap:wrap}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:#fff;
+      color:var(--muted);
+      font-size:13px;
+      white-space:nowrap;
+    }
+    nav.toc{
+      margin-top:16px;
+      padding:14px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+    }
+    nav.toc h2{margin:0 0 8px; font-size:16px}
+    .tocgrid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap:8px 18px;
+    }
+    .tocgrid a{color:var(--text)}
+    .tocgrid a span{color:var(--muted)}
+    .section{
+      margin-top:22px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:18px;
+    }
+    .section h2{
+      margin:0 0 6px;
+      font-size:20px;
+      letter-spacing:-0.01em;
+      scroll-margin-top: 80px;
+    }
+    .section h3{
+      margin:18px 0 6px;
+      font-size:17px;
+      letter-spacing:-0.01em;
+      scroll-margin-top: 80px;
+    }
+    .meta{color:var(--muted); font-size:14px; margin:0 0 10px}
+    .note{
+      margin:10px 0 0;
+      padding:10px 12px;
+      border-left:4px solid #93c5fd;
+      background:#eff6ff;
+      border-radius:12px;
+      color:#1f2937;
+      font-size:14px;
+    }
+    .grid{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap:14px;
+      align-items:start;
+    }
+    figure{
+      margin:0;
+      padding:12px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#fff;
+    }
+    figure.full{grid-column: 1 / -1;}
+    img{
+      width:100%;
+      height:auto;
+      display:block;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#f3f4f6;
+    }
+    figcaption{
+      margin-top:10px;
+      font-size:13px;
+      color:var(--muted);
+    }
+    ul{margin:8px 0 0 18px}
+    .divider{
+      margin:18px 0 0;
+      border-top:1px dashed var(--border);
+      padding-top:16px;
+    }
+    footer{
+      margin-top:22px;
+      color:var(--muted);
+      font-size:13px;
+      text-align:center;
+    }
+    code.kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background:#f3f4f6;
+      border:1px solid var(--border);
+      border-radius:8px;
+      padding:2px 6px;
+      color:#111827;
+      font-size:12px;
+    }
+  </style>
+</head>
 
+<body>
+  <header>
+    <div class="hero">
+      <h1 class="title">CS180 Project 5 — Diffusion Models (Parts A & B)</h1>
+      <p class="subtitle">
+        A single-page writeup showing all required deliverables for Part A (image diffusion editing) and Part B (training UNets for denoising + flow matching).
+      </p>
+
+      <div class="pillrow">
+        <div class="pill">📄 One page (A + B)</div>
+        <div class="pill">🖼️ 43 figures embedded</div>
+        <div class="pill">🔗 Internal TOC anchors</div>
+      </div>
+
+      <nav class="toc" aria-label="Table of contents">
+        <h2>Table of Contents</h2>
+        <div class="tocgrid">
+          <a href="#part-a"><strong>Part A</strong> <span>— Diffusion Editing</span></a>
+          <a href="#part-b"><strong>Part B</strong> <span>— Training UNets</span></a>
+
+          <a href="#A0">A.0 <span>Text-to-Image</span></a>
+          <a href="#A11">1.1 <span>Forward Process</span></a>
+          <a href="#A12">1.2 <span>Gaussian Blur Denoising</span></a>
+          <a href="#A13">1.3 <span>One-Step Denoising</span></a>
+          <a href="#A14">1.4 <span>Iterative Denoising</span></a>
+          <a href="#A15">1.5 <span>Sampling (no CFG)</span></a>
+          <a href="#A16">1.6 <span>Sampling (with CFG)</span></a>
+          <a href="#A17">1.7 <span>Image-to-Image (SDEdit)</span></a>
+          <a href="#A171">1.7.1 <span>Hand-drawn / Web Edits</span></a>
+          <a href="#A172">1.7.2 <span>Inpainting</span></a>
+          <a href="#A173">1.7.3 <span>Text-Conditional i2i</span></a>
+          <a href="#A18">1.8 <span>Visual Anagrams</span></a>
+          <a href="#A19">1.9 <span>Hybrid Images</span></a>
+
+          <a href="#B12">B.1.2 <span>One-step MNIST Denoiser</span></a>
+          <a href="#B121">B.1.2.1 <span>Training (σ=0.5)</span></a>
+          <a href="#B122">B.1.2.2 <span>OOD σ Testing</span></a>
+          <a href="#B123">B.1.2.3 <span>Pure Noise Denoising</span></a>
+
+          <a href="#B22">B.2.2 <span>Time-conditioned Flow Matching</span></a>
+          <a href="#B23">B.2.3 <span>Sampling (time-only)</span></a>
+          <a href="#B25">B.2.5 <span>Class-conditioned Training</span></a>
+          <a href="#B26">B.2.6 <span>Class-conditioned Sampling + CFG</span></a>
+          <a href="#B26nosched">B.2.6 <span>No-scheduler Experiment</span></a>
+        </div>
+
+        <p class="note">
+          Assignment links:
+          <a href="https://cal-cs180.github.io/fa25/hw/proj5/index.html">proj5 index</a> ·
+          <a href="https://cal-cs180.github.io/fa25/hw/proj5/parta.html">part A</a> ·
+          <a href="https://cal-cs180.github.io/fa25/hw/proj5/partb.html">part B</a>
+        </p>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- ===================== PART A ===================== -->
+    <section id="part-a" class="section">
+      <h2>Part A — Diffusion Models for Image Editing</h2>
+      <p class="meta">
+        In Part A, we use a pretrained diffusion model to (1) generate images, (2) denoise and sample, and (3) do image-to-image editing (SDEdit), inpainting, and prompt-controlled edits.
+      </p>
+
+      <div class="divider" id="A0">
+        <h3>A.0 — Text-to-Image</h3>
+        <p class="meta">
+          We generate images directly from text prompts and compare how inference step count affects quality and fidelity.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img1%20A.0.png" alt="A.0 Text-to-Image results (3 prompts x 2 step counts)">
+            <figcaption>Figure A.0 — Text-to-Image: 3 prompts × 2 inference step counts.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="A11">
+        <h3>1.1 — Forward Process (Adding Noise)</h3>
+        <p class="meta">
+          We visualize the forward diffusion process by progressively adding noise to a real image. Higher noise corresponds to later timesteps.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img2%20A1.1.png" alt="1.1 Forward process visualization">
+            <figcaption>Figure 1.1 — Forward process visualization (increasing noise over timesteps).</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="A12">
+        <h3>1.2 — Classical Denoising (Gaussian Blur Baseline)</h3>
+        <p class="meta">
+          As a simple baseline, we apply Gaussian blur to noisy images. This reduces high-frequency noise but also washes out detail.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img3%20A1.2%20Noisy%20and%20gaussian%20blur%20denoising.png" alt="1.2 Gaussian blur denoising comparisons">
+            <figcaption>Figure 1.2 — Noisy images vs Gaussian blur denoising baseline.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="A13">
+        <h3>1.3 — One-Step Denoising with Diffusion Model</h3>
+        <p class="meta">
+          We try “one-step denoising” using the diffusion model at a chosen timestep. This usually improves over blur, but a single step can’t fully recover structure at high noise.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img4%20A1.3%20Noisy%20and%20One-Step%20Denoised.png" alt="1.3 One-step denoising comparisons">
+            <figcaption>Figure 1.3 — Noisy inputs vs one-step denoised outputs (diffusion model).</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="A14">
+        <h3>1.4 — Iterative Denoising (Reverse Diffusion)</h3>
+        <p class="meta">
+          Instead of one-step, we iteratively denoise across multiple timesteps. This is the standard reverse diffusion procedure and typically yields much better reconstructions.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img5%20A1.4%20t%3D90-690.png" alt="1.4 Intermediate noisy states across timesteps">
+            <figcaption>Figure 1.4a — Intermediate states across timesteps (visualizing the denoising trajectory).</figcaption>
+          </figure>
+          <figure class="full">
+            <img src="images/img6%20A1.4%20contrast.png" alt="1.4 Comparison: original vs iterative vs one-step vs Gaussian blur">
+            <figcaption>Figure 1.4b — Comparison: Original vs Iteratively Denoised vs One-Step vs Gaussian Blur.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="A15">
+        <h3>1.5 — Sampling from the Model (No Classifier-Free Guidance)</h3>
+        <p class="meta">
+          We generate multiple samples from scratch (starting from noise) without guidance. Results can be lower quality or drift from the prompt.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img7%20A1.5%20NO%20CFG.png" alt="1.5 Samples without classifier-free guidance">
+            <figcaption>Figure 1.5 — Unconditional / no-CFG sampling examples.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="A16">
+        <h3>1.6 — Sampling with Classifier-Free Guidance (CFG)</h3>
+        <p class="meta">
+          CFG improves prompt adherence by combining conditional and unconditional predictions. This generally sharpens samples and makes them more aligned with the text prompt.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img8%20A1.6%20CFG%20Samples.png" alt="1.6 Samples with classifier-free guidance">
+            <figcaption>Figure 1.6 — Sampling with CFG (improved prompt alignment and quality).</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="A17">
+        <h3>1.7 — Image-to-Image Translation (SDEdit / Projection to Natural Image Manifold)</h3>
+        <p class="meta">
+          We add controlled amounts of noise to an input image, then denoise back onto the “natural image manifold.”
+          Less noise preserves the original; more noise yields stronger edits.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img9%20A1.7.0%20Campanile.png" alt="1.7 SDEdit on Campanile across noise levels">
+            <figcaption>Figure 1.7 (Campanile) — SDEdit edits across noise levels [1,3,5,7,10,20].</figcaption>
+          </figure>
+          <figure>
+            <img src="images/img10%20A1.7.0%20Car.png" alt="1.7 SDEdit on own image: Car">
+            <figcaption>Figure 1.7 (Own image 1) — SDEdit edits across noise levels.</figcaption>
+          </figure>
+          <figure>
+            <img src="images/img11%20A1.7.0%20Flower.png" alt="1.7 SDEdit on own image: Flower">
+            <figcaption>Figure 1.7 (Own image 2) — SDEdit edits across noise levels.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="A171">
+        <h3>1.7.1 — Editing Hand-Drawn and Web Images</h3>
+        <p class="meta">
+          Starting from sketches or non-photorealistic images, SDEdit can “project” them toward a realistic-looking image manifold, often producing dramatic transformations.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img12%20A1.7.1%20House.png" alt="1.7.1 House edits across noise levels">
+            <figcaption>Figure 1.7.1 — Hand-drawn/web example: House edits across noise levels.</figcaption>
+          </figure>
+          <figure class="full">
+            <img src="images/img13%20A1.7.1%20Cat.png" alt="1.7.1 Cat edits across noise levels">
+            <figcaption>Figure 1.7.1 — Hand-drawn/web example: Cat edits across noise levels.</figcaption>
+          </figure>
+          <figure class="full">
+            <img src="images/img14%20A1.7.1%20Panda.png" alt="1.7.1 Panda edits across noise levels">
+            <figcaption>Figure 1.7.1 — Hand-drawn/web example: Panda edits across noise levels.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="A172">
+        <h3>1.7.2 — Inpainting</h3>
+        <p class="meta">
+          Inpainting fills in missing regions specified by a mask, while preserving the unmasked region. We “re-noise” the known pixels at each step to keep them consistent with the diffusion timestep.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img15%20A1.7.2%20Campanile%20Inpainted.png" alt="1.7.2 Campanile inpainting result">
+            <figcaption>Figure 1.7.2 — Campanile inpainting (masked region filled in).</figcaption>
+          </figure>
+          <figure class="full">
+            <img src="images/img16%20A1.7.2%20Cat%20Inpainted.png" alt="1.7.2 Cat inpainting result">
+            <figcaption>Extra example — Cat inpainting.</figcaption>
+          </figure>
+          <figure class="full">
+            <img src="images/img17%20A1.7.2%20Dog%20Inpainted.png" alt="1.7.2 Dog inpainting result">
+            <figcaption>Extra example — Dog inpainting.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="A173">
+        <h3>1.7.3 — Text-Conditional Image-to-Image Translation</h3>
+        <p class="meta">
+          This is SDEdit + text guidance: the result gradually approaches the original image (as noise decreases) while also reflecting the text prompt.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img18%20A1.7.3%20Campanile.png" alt="1.7.3 Text-conditional i2i on Campanile with prompt 'a rocket ship'">
+            <figcaption>Figure 1.7.3 (Campanile) — Prompt: “a rocket ship” across noise levels [1,3,5,7,10,20].</figcaption>
+          </figure>
+          <figure class="full">
+            <img src="images/img19%20A1.7.3%20Bird.png" alt="1.7.3 Text-conditional i2i on Bird prompt 'a phoenix made of fire'">
+            <figcaption>Figure 1.7.3 (Own image 1) — Prompt-controlled edits across noise levels.</figcaption>
+          </figure>
+          <figure class="full">
+            <img src="images/img20%20A1.7.3%20Cow.png" alt="1.7.3 Text-conditional i2i on Cow prompt 'a robot cow in a futuristic farm'">
+            <figcaption>Figure 1.7.3 (Own image 2) — Prompt-controlled edits across noise levels.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="A18">
+        <h3>1.8 — Visual Anagrams</h3>
+        <p class="meta">
+          We generate an “illusion” image that can be interpreted as two different prompts depending on whether it is viewed normally or flipped.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img21%20A1.8.png" alt="1.8 Visual anagrams results">
+            <figcaption>Figure 1.8 — Visual anagrams (prompt changes under flipping).</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="A19">
+        <h3>1.9 — Hybrid Images (Factorized Diffusion)</h3>
+        <p class="meta">
+          We combine low-frequency components from one prompt’s denoising prediction with high-frequency components from another, producing a hybrid image that changes interpretation with viewing conditions.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img22%20A1.9.png" alt="1.9 Hybrid images results">
+            <figcaption>Figure 1.9 — Hybrid images using factorized diffusion (two prompt pairs).</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== PART B ===================== -->
+    <section id="part-b" class="section">
+      <h2>Part B — Training UNets (Denoising + Flow Matching)</h2>
+      <p class="meta">
+        In Part B, we train from scratch on MNIST: (1) a one-step denoiser UNet, and (2) a flow-matching UNet that generates samples iteratively (time-conditioned and class-conditioned).
+      </p>
+
+      <div class="divider" id="B12">
+        <h3>B.1.2 — Training a One-Step Denoiser UNet</h3>
+        <p class="meta">
+          We first train a UNet to denoise a single step: given a noisy MNIST digit (noise added with σ), predict the clean digit using an MSE objective.
+        </p>
+
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img23%20B1.2%20Sigma%20Visualization%20%26%20OOD.png" alt="B1.2 Noising visualization across sigma values">
+            <figcaption>Figure B.1.2 — Noising visualization across σ = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0].</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="B121">
+        <h3>B.1.2.1 — Training (σ = 0.5)</h3>
+        <p class="meta">
+          We train on MNIST with σ = 0.5 and report both the training loss curve and qualitative denoising results at epoch 1 and epoch 5.
+        </p>
+        <div class="grid">
+          <figure>
+            <img src="images/img24%20B1.2.1%20Epoch%201%20Test%20Samples.png" alt="B1.2.1 Epoch 1 test samples">
+            <figcaption>Epoch 1 denoising results (σ=0.5).</figcaption>
+          </figure>
+          <figure>
+            <img src="images/img25%20B1.2.1%20Epoch%205%20Test%20Samples.png" alt="B1.2.1 Epoch 5 test samples">
+            <figcaption>Epoch 5 denoising results (σ=0.5).</figcaption>
+          </figure>
+          <figure class="full">
+            <img src="images/img26%20B1.2.1%20loss%20curve.png" alt="B1.2.1 training loss curve">
+            <figcaption>Training loss curve during σ=0.5 denoiser training.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="B122">
+        <h3>B.1.2.2 — Out-of-Distribution σ Testing</h3>
+        <p class="meta">
+          The denoiser was trained at σ = 0.5, so we test performance under different σ values to see how robust the learned mapping is.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img27%20B1.2.2%20OOD%20Denoising.png" alt="B1.2.2 OOD denoising across sigma values">
+            <figcaption>OOD denoising results when varying σ (same image, different noise levels).</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="B123">
+        <h3>B.1.2.3 — Denoising Pure Noise</h3>
+        <p class="meta">
+          We repeat training but with pure noise inputs. With an MSE objective, the model tends to regress toward an “average” digit-like template (a centroid effect).
+        </p>
+        <div class="grid">
+          <figure>
+            <img src="images/img28%20B1.2.3%20Pure%20Noise%20Epoch%201%20Test%20Samples.png" alt="B1.2.3 pure noise denoising epoch 1">
+            <figcaption>Epoch 1 samples when denoising pure noise.</figcaption>
+          </figure>
+          <figure>
+            <img src="images/img29%20B1.2.3%20Pure%20Noise%20Epoch%205%20Test%20Samples.png" alt="B1.2.3 pure noise denoising epoch 5">
+            <figcaption>Epoch 5 samples when denoising pure noise.</figcaption>
+          </figure>
+          <figure class="full">
+            <img src="images/img30%20B1.2.3%20Pure%20Noise%20Loss.png" alt="B1.2.3 pure noise loss curve">
+            <figcaption>Training loss curve for the pure-noise denoiser.</figcaption>
+          </figure>
+        </div>
+        <p class="note">
+          Observation: outputs converge toward a dataset “centroid” because minimizing MSE encourages predicting the mean of plausible targets.
+        </p>
+      </div>
+
+      <div class="divider" id="B22">
+        <h3>B.2.2 — Training a Flow Matching (Time-Conditioned) UNet</h3>
+        <p class="meta">
+          We train a time-conditioned UNet to predict the flow that transports noise toward data. We report the overall training loss.
+        </p>
+        <div class="grid">
+          <figure>
+            <img src="images/img35%20B2.2%20step%20loss%20%28smoothed%29.png" alt="B2.2 step loss smoothed">
+            <figcaption>Step loss (smoothed) for time-conditioned training.</figcaption>
+          </figure>
+          <figure>
+            <img src="images/img34%20B2.2%20epoch%20loss.png" alt="B2.2 epoch loss">
+            <figcaption>Epoch loss for time-conditioned training.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="B23">
+        <h3>B.2.3 — Sampling from the Time-Conditioned UNet</h3>
+        <p class="meta">
+          We iteratively integrate the learned flow from pure noise to produce MNIST-like samples. We show samples at epochs 1, 5, and 10.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img31%20B2.2%20epoch1.png" alt="B2.3 time-conditioned sampling epoch 1">
+            <figcaption>Sampling results at epoch 1 (time-conditioned).</figcaption>
+          </figure>
+          <figure class="full">
+            <img src="images/img32%20B2.2%20epoch5.png" alt="B2.3 time-conditioned sampling epoch 5">
+            <figcaption>Sampling results at epoch 5 (time-conditioned).</figcaption>
+          </figure>
+          <figure class="full">
+            <img src="images/img33%20B2.2%20epoch10.png" alt="B2.3 time-conditioned sampling epoch 10">
+            <figcaption>Sampling results at epoch 10 (time-conditioned).</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="B25">
+        <h3>B.2.5 — Training a Class-Conditioned UNet</h3>
+        <p class="meta">
+          We extend conditioning with a digit class vector (0–9) and apply conditioning dropout to enable classifier-free guidance during sampling. Below are loss curves for class-conditioned training.
+        </p>
+        <div class="grid">
+          <figure>
+            <img src="images/img40%20B2.5%20step%20loss%20%28smoothed%29.png" alt="B2.5 class-conditioned step loss smoothed">
+            <figcaption>Step loss (smoothed) for class-conditioned training.</figcaption>
+          </figure>
+          <figure>
+            <img src="images/img39%20B2.5%20epoch%20loss.png" alt="B2.5 class-conditioned epoch loss">
+            <figcaption>Epoch loss for class-conditioned training.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="B26">
+        <h3>B.2.6 — Sampling from the Class-Conditioned UNet (CFG γ = 5.0)</h3>
+        <p class="meta">
+          We generate 4 instances per class (0–9) using classifier-free guidance with γ = 5.0. We show results at epochs 1, 5, and 10.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img36%20B2.5%20epoch%201.png" alt="B2.6 class-conditioned samples epoch 1">
+            <figcaption>Class-conditioned samples at epoch 1 (4 per class, γ=5.0).</figcaption>
+          </figure>
+          <figure class="full">
+            <img src="images/img37%20B2.5%20epoch%205.png" alt="B2.6 class-conditioned samples epoch 5">
+            <figcaption>Class-conditioned samples at epoch 5 (4 per class, γ=5.0).</figcaption>
+          </figure>
+          <figure class="full">
+            <img src="images/img38%20B2.5%20epoch10.png" alt="B2.6 class-conditioned samples epoch 10">
+            <figcaption>Class-conditioned samples at epoch 10 (4 per class, γ=5.0).</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="divider" id="B26nosched">
+        <h3>B.2.6 — No Scheduler Experiment</h3>
+        <p class="meta">
+          We remove the exponential LR scheduler and try to keep performance similar. Below are the resulting samples and training curves.
+        </p>
+        <div class="grid">
+          <figure class="full">
+            <img src="images/img41%20B2.6%20Class-conditioned%20samples%20epoch%2010.png" alt="B2.6 no-scheduler class-conditioned samples">
+            <figcaption>No-scheduler sampling result (epoch 10).</figcaption>
+          </figure>
+          <figure>
+            <img src="images/img43%20B2.6%20step%20loss%20%28smoothed%29.png" alt="B2.6 no-scheduler step loss smoothed">
+            <figcaption>No-scheduler step loss (smoothed).</figcaption>
+          </figure>
+          <figure>
+            <img src="images/img42%20B2.6%20epoch%20loss.png" alt="B2.6 no-scheduler epoch loss">
+            <figcaption>No-scheduler epoch loss.</figcaption>
+          </figure>
+        </div>
+
+        <p class="note">
+          Compensation idea: without a scheduler, a common fix is to lower the base learning rate (or use a warmup + smaller constant LR) to avoid unstable early training while still converging well.
+        </p>
+      </div>
+
+      <footer>
+        <p>
+          End of Project 5 writeup. If any image path doesn’t load, double-check your filenames and that they’re inside <code class="kbd">/5/images/</code>.
+        </p>
+      </footer>
+    </section>
+  </main>
+</body>
+</html>
