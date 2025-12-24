@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS180 Project 4: Neural Radiance Field</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: -20px -20px 40px -20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        h2 {
+            color: #667eea;
+            margin-top: 50px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.8em;
+        }
+
+        h3 {
+            color: #764ba2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .image-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .image-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .image-container {
+            text-align: center;
+        }
+
+        .image-container img,
+        .image-container video {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .image-container img:hover,
+        .image-container video:hover {
+            transform: scale(1.02);
+        }
+
+        .caption {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+            font-style: italic;
+        }
+
+        .single-image {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .single-image img,
+        .single-image video {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .progression-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .highlight-box {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        ul {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 50px;
+            background: #f5f5f5;
+            color: #666;
+            margin: 50px -20px -20px -20px;
+        }
+
+        @media (max-width: 768px) {
+            .image-grid-2,
+            .image-grid-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            h2 {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Project 4: Neural Radiance Field</h1>
+            <div class="subtitle">CS180: Intro to Computer Vision and Computational Photography</div>
+            <div class="subtitle">Fergus Yang</div>
+        </header>
+
+        <!-- PART 0 -->
+        <h2>Part 0: Calibrating Your Camera and Capturing a 3D Scan</h2>
+        
+        <h3>Part 0.1: Calibrating Your Camera</h3>
+        <p>
+            I captured 50 images of ArUco calibration tags from my phone camera at various angles and distances, maintaining a consistent zoom level throughout. For each image, I used OpenCV's ArUco detector to identify the tags and extract corner coordinates. I then collected all detected corners along with their corresponding 3D world coordinates. Using <code>cv2.calibrateCamera()</code>, I computed the camera intrinsics and distortion coefficients. Images where no tags were detected were automatically excluded from the calibration dataset.
+        </p>
+
+        <h3>Part 0.2: Capturing a 3D Object Scan</h3>
+        <p>
+            I captured 50 images of a toy dinosaur with a single ArUco tag placed next to it on a tabletop, using the same camera and zoom level as calibration. The images were taken from different angles around the object to ensure comprehensive coverage, with the tag visible in each shot.
+        </p>
+
+        <h3>Part 0.3: Estimating Camera Pose</h3>
+        <p>
+            Using the camera intrinsics and distortion coefficients from Part 0.1, I estimated the camera pose (position and orientation) for each image of the object scan. This is the classic Perspective-n-Point (PnP) problem: given a set of 3D points in world coordinates and their corresponding 2D projections in an image, find the camera's extrinsic parameters (rotation and translation).
+        </p>
+        <p>
+            For each image, I detected the single ArUco tag and used <code>cv2.solvePnP()</code> to estimate the camera pose. OpenCV's <code>solvePnP()</code> returns the world-to-camera transformation, which I inverted to get the camera-to-world (c2w) matrix for visualization and use in NeRF training.
+        </p>
+
+        <h3>Camera Frustum Visualization</h3>
+        <p>
+            I visualized the camera poses using Viser, which displays camera frustums in 3D space showing both their positions and the captured images. Below are two screenshots of the visualization showing the estimated camera poses from different viewpoints.
+        </p>
+
+        <div class="image-grid-2">
+            <div class="image-container">
+                <img src="images/part0_viser_view1.png" alt="Camera Frustum Visualization 1">
+                <div class="caption">Viser visualization (view 1)</div>
+            </div>
+            <div class="image-container">
+                <img src="images/part0_viser_view2.png" alt="Camera Frustum Visualization 2">
+                <div class="caption">Viser visualization (view 2)</div>
+            </div>
+        </div>
+
+        <h3>Part 0.4: Undistorting Images and Creating a Dataset</h3>
+        <p>
+            With the camera intrinsics, distortion coefficients, and pose estimates, I undistorted the images using <code>cv2.undistort()</code> to remove lens distortion. After undistorting all images, I split them into training and validation sets. Out of the 50 captured images, 45 successfully had ArUco tags detected and were included in the final dataset (40 for training, 5 for validation).
+        </p>
+
+        <!-- PART 1 -->
+        <h2>Part 1: Fit a Neural Field to a 2D Image</h2>
+        
+        <p>
+            In this section, I implemented a Neural Field that represents a 2D image. The network takes in 2D pixel coordinates (x, y) and outputs the 3D RGB color at that position.
+        </p>
+
+        <h3>Network Architecture</h3>
+        <p>
+            I implemented a Multilayer Perceptron (MLP) network with Sinusoidal Positional Encoding (PE). The MLP consists of a stack of fully connected layers with ReLU activations, followed by a sigmoid activation at the output to constrain RGB values to [0, 1]. The network structure is:
+        </p>
+        <ul>
+            <li><strong>Input:</strong> 2D pixel coordinates (x, y) normalized to [0, 1]</li>
+            <li><strong>Positional Encoding:</strong> Expands the 2-dim coordinates to a higher dimensional space using sinusoidal functions</li>
+            <li><strong>MLP Layers:</strong> Multiple linear layers with ReLU activations</li>
+            <li><strong>Output:</strong> 3-dim RGB pixel colors in range [0, 1]</li>
+        </ul>
+        <p>
+            The Positional Encoding applies sinusoidal functions: PE(x) = [x, sin(2⁰πx), cos(2⁰πx), sin(2¹πx), cos(2¹πx), ..., sin(2^(L-1)πx), cos(2^(L-1)πx)], where L is the maximum frequency level.
+        </p>
+
+        <h3>Training Setup</h3>
+        <p>
+            I implemented a dataloader that randomly samples pixels per iteration for training. The model is trained using Mean Squared Error (MSE) loss with the Adam optimizer (learning rate 1e-3) for 3000 iterations with a batch size of 4096 pixels. I used PSNR (Peak Signal-to-Noise Ratio) as the evaluation metric.
+        </p>
+
+        <h3>Training Progression</h3>
+        <p>
+            Below are snapshots of the network's reconstruction at different training iterations for both the provided test image and my own image (gummy bear), showing how the model progressively learns to represent image details.
+        </p>
+
+        <div class="single-image">
+            <img src="images/testimg_progression.png" alt="Test Image Training Progression">
+            <div class="caption">Test image training progression (L=10, width=256)</div>
+        </div>
+
+        <div class="single-image">
+            <img src="images/ownimg_progression.png" alt="Own Image Training Progression">
+            <div class="caption">Own image (gummy bear) training progression (L=10, width=256)</div>
+        </div>
+
+        <h3>PSNR Curves</h3>
+        <p>
+            The graphs below show the PSNR (Peak Signal-to-Noise Ratio) during training. Higher PSNR indicates better reconstruction quality.
+        </p>
+
+        <div class="image-grid-2">
+            <div class="image-container">
+                <img src="images/testimg_psnr_curve.png" alt="Test Image PSNR">
+                <div class="caption">Test image PSNR curve</div>
+            </div>
+            <div class="image-container">
+                <img src="images/ownimg_psnr_curve.png" alt="Own Image PSNR">
+                <div class="caption">Own image PSNR curve</div>
+            </div>
+        </div>
+
+        <h3>Hyperparameter Tuning</h3>
+        <p>
+            I experimented with different values of L (positional encoding frequency) and width (number of channels in hidden layers). Below is a 2×2 grid comparing results with different hyperparameters. Higher L values capture more high-frequency details, while wider networks have more capacity. The results demonstrate the importance of positional encoding - without it, the network produces smooth, blurry images that fail to capture fine details.
+        </p>
+
+        <div class="single-image">
+            <img src="images/part1_2x2_grid.png" alt="Hyperparameter Grid">
+            <div class="caption">2×2 grid: varying L (positional encoding frequency) and width</div>
+        </div>
+
+        <h3>Final Results</h3>
+        <div class="image-grid-2">
+            <div class="image-container">
+                <img src="images/testimg_final.png" alt="Test Image Final">
+                <div class="caption">Test image final reconstruction</div>
+            </div>
+            <div class="image-container">
+                <img src="images/ownimg_final.png" alt="Own Image Final">
+                <div class="caption">Own image final reconstruction</div>
+            </div>
+        </div>
+
+        <!-- PART 2 -->
+        <h2>Part 2: Fit a Neural Radiance Field from Multi-view Images</h2>
+
+        <h3>Part 2.1: Create Rays from Cameras</h3>
+        <p>
+            To render a 3D scene from multiple camera viewpoints, I needed to convert pixel coordinates into 3D rays in world space. This involves three coordinate transformations:
+        </p>
+        <ul>
+            <li><strong>Camera to World Coordinate Conversion:</strong> Implemented <code>transform(c2w, x_c)</code> to transform points from camera coordinates to world coordinates using the camera-to-world (c2w) transformation matrix.</li>
+            <li><strong>Pixel to Camera Coordinate Conversion:</strong> Implemented <code>pixel_to_camera(K, uv, s)</code> to convert pixel coordinates to camera coordinates using the inverse of the intrinsic matrix K at a given depth s.</li>
+            <li><strong>Pixel to Ray Conversion:</strong> Implemented <code>pixel_to_ray(K, c2w, uv)</code> to convert pixels to rays with origin and normalized direction. The ray origin is the camera position in world space, and the direction is computed by transforming a point at depth 1 to world coordinates.</li>
+        </ul>
+
+        <h3>Part 2.2: Sampling</h3>
+        <p>
+            With the ability to convert pixels to rays, I implemented sampling functions:
+        </p>
+        <ul>
+            <li><strong>Sampling Rays from Images:</strong> I sample N rays at every training iteration by randomly sampling from all pixels across all training images.</li>
+            <li><strong>Sampling Points Along Rays:</strong> For each ray defined by r(t) = r_o + t·r_d, I sample points at regular intervals between near and far bounds (near=2.0, far=6.0 for lego). I add random perturbation during training to improve stability, using 64 samples per ray.</li>
+        </ul>
+
+        <h3>Part 2.3: Ray and Sample Visualization</h3>
+        <p>
+            Below are visualizations showing the rays and sample points in 3D space along with the training cameras. This helps verify that the ray generation and sampling are working correctly.
+        </p>
+
+        <div class="image-grid-2">
+            <div class="image-container">
+                <img src="images/part2_rays_view1.png" alt="Ray Visualization 1">
+                <div class="caption">Ray and sample visualization (view 1)</div>
+            </div>
+            <div class="image-container">
+                <img src="images/part2_rays_view2.png" alt="Ray Visualization 2">
+                <div class="caption">Ray and sample visualization (view 2)</div>
+            </div>
+        </div>
+
+        <h3>Part 2.4: Neural Radiance Field</h3>
+        <p>
+            The NeRF network extends the 2D neural field from Part 1 to represent a 3D scene. Key differences include:
+        </p>
+        <ul>
+            <li><strong>Input:</strong> 3D world coordinates (x, y, z) along with the 3D ray direction (d_x, d_y, d_z), both encoded using positional encoding with different frequency levels (L=10 for coordinates, L=4 for direction).</li>
+            <li><strong>Output:</strong> RGB color (3 values) and density σ (1 value). Density is constrained to be positive using ReLU, and RGB is constrained to [0,1] using sigmoid.</li>
+            <li><strong>Architecture:</strong> Deeper network with skip connections to handle the complexity of 3D scene representation. The network splits into two branches: one for predicting density and another for predicting view-dependent color.</li>
+        </ul>
+
+        <h3>Part 2.5: Volume Rendering on Lego Dataset</h3>
+        <p>
+            I implemented the discrete volume rendering equation: Ĉ(r) = Σᵢ Tᵢ(1 - exp(-σᵢδᵢ))cᵢ, where Tᵢ = exp(-Σⱼ₌₁ⁱ⁻¹ σⱼδⱼ). This combines the density and color predictions along each ray to produce the final pixel color.
+        </p>
+        <p>
+            I trained the NeRF on the Lego dataset for 1200 iterations with a learning rate of 5e-4, Adam optimizer, and a batch size of 10k rays. Below are validation images at different training stages showing progressive improvement.
+        </p>
+
+        <div class="single-image">
+            <img src="images/lego_progression.png" alt="Lego Training Progression">
+            <div class="caption">Lego NeRF training progression at iterations 0, 200, 500, 1000, 1200</div>
+        </div>
+
+        <div class="single-image">
+            <img src="images/lego_psnr_curve.png" alt="Lego PSNR Curve">
+            <div class="caption">Lego validation PSNR curve</div>
+        </div>
+
+        <h3>Novel View Rendering</h3>
+        <p>
+            After training, I rendered a spherical view around the Lego bulldozer using test camera poses. The video demonstrates the model's ability to synthesize novel views from arbitrary camera positions.
+        </p>
+
+        <div class="single-image">
+            <video controls loop autoplay muted>
+                <source src="images/lego_spherical.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="caption">Lego novel view synthesis (spherical orbit)</div>
+        </div>
+
+        <h3>Part 2.6: Training with Your Own Data</h3>
+        <p>
+            Using the dinosaur toy dataset I captured and processed in Part 0, I trained a NeRF model on my own data. I used the following configuration:
+        </p>
+        <ul>
+            <li><strong>Near-Far Bounds:</strong> 0.02 to 0.5 meters (adjusted for the smaller object scale)</li>
+            <li><strong>Learning Rate:</strong> 5e-4</li>
+            <li><strong>Number of Iterations:</strong> 3000</li>
+            <li><strong>Batch Size:</strong> 4000 rays per iteration</li>
+            <li><strong>Number of Samples Per Ray:</strong> 64</li>
+        </ul>
+
+        <div class="highlight-box">
+            <strong>Key Challenge:</strong> The initial orbit rendering was very blurry and the dinosaur was barely visible. I solved this by:
+            <ul style="margin-top: 10px;">
+                <li>Analyzing training camera poses to find the actual object center (instead of using a hardcoded target)</li>
+                <li>Computing where cameras are looking by projecting forward vectors</li>
+                <li>Adjusting orbit radius to be closer (85% of median distance)</li>
+                <li>Increasing elevation angle for better overhead view (25°)</li>
+            </ul>
+        </div>
+
+        <div class="single-image">
+            <img src="images/own_progression.png" alt="Own Data Training Progression">
+            <div class="caption">Own object training progression showing improvement over iterations</div>
+        </div>
+
+        <div class="single-image">
+            <img src="images/own_psnr_curve.png" alt="Own Data PSNR">
+            <div class="caption">Own object validation PSNR curve</div>
+        </div>
+
+        <h3>Final Novel View Rendering</h3>
+        <p>
+            Below is the final orbit animation of my dinosaur toy. After fixing the camera positioning and target calculation, the dinosaur is now clearly visible and centered throughout the orbit.
+        </p>
+
+        <div class="single-image">
+            <img src="images/own_orbit.gif" alt="Own Object Orbit">
+            <div class="caption">Dinosaur toy novel view synthesis (orbital animation)</div>
+        </div>
+
+        <div class="highlight-box">
+            <strong>Reflections:</strong> Training on my own data was more challenging than the Lego dataset due to:
+            <ul style="margin-top: 10px;">
+                <li>Fewer training views (40 vs 100 for Lego)</li>
+                <li>Potential lighting variations during capture</li>
+                <li>Smaller object size resulting in fewer sampled rays intersecting the object</li>
+                <li>Need for careful parameter tuning (near/far bounds, orbit positioning)</li>
+            </ul>
+            Despite these challenges, the model successfully learned to represent the 3D structure and appearance of the dinosaur, demonstrating NeRF's capability to synthesize novel views from sparse input images.
+        </div>
+
+        <h2>Conclusion</h2>
+        <p>
+            This project provided hands-on experience with Neural Radiance Fields, from camera calibration and 3D reconstruction to training neural networks for novel view synthesis. I learned how to:
+        </p>
+        <ul>
+            <li>Calibrate cameras and estimate poses using ArUco markers</li>
+            <li>Implement neural fields with positional encoding for image representation</li>
+            <li>Build and train NeRF models with volume rendering</li>
+            <li>Debug and optimize 3D scene reconstruction</li>
+            <li>Generate novel views from trained models</li>
+        </ul>
+        <p>
+            The progression from 2D image fitting to 3D scene reconstruction demonstrated the power and flexibility of implicit neural representations for computer vision tasks.
+        </p>
+
+        <footer>
+            <p>&copy; 2024 Fergus Yang | CS180 Project 4: Neural Radiance Field</p>
+        </footer>
+    </div>
+</body>
+</html>
